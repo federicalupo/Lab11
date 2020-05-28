@@ -67,7 +67,6 @@ public class Simulatore {
 			Evento e = queue.poll();
 			
 			processEvent(e);
-			System.out.println("--flusso"+e.getFlow().getFlow()+" flusso medio del fiume " + e.getFlow().getRiver().getFlowAvg() +"  contatore  "+this.cont+" quantita media   "+this.quantitaMedia+"quantita presente "+this.quantitaPresente);
 		}
 		
 		this.cMedia = this.quantitaMedia/this.cont;
@@ -76,48 +75,60 @@ public class Simulatore {
 	
 	private void processEvent(Evento e) {
 		
-		double somma = this.quantitaPresente+e.getFlow().getFlow();
-		
-		//incremento 
-		if(somma > this.capienzaTot) {
-			this.quantitaPresente= this.capienzaTot;
-			
-			this.cont++;
-			this.quantitaMedia+=this.quantitaPresente;
-		}else {	
-			this.quantitaPresente+=e.getFlow().getFlow();
-			
-			this.cont++;
-			this.quantitaMedia+=this.quantitaPresente;
-		}
-		
-		//riduco
-		
-		double random = Math.random();
-		
-		
-		if(random < PERC) { //riduzione extra
-			if((this.quantitaPresente-(10*this.f_out_min))>=0 ) {
-					this.quantitaPresente-= (10*this.f_out_min);
+		switch(e.getType()) {
+			case INGRESSO:
+				double somma = this.quantitaPresente+e.getFlow().getFlow(); //prova la somma
+				
+				//incremento 
+				if(somma > this.capienzaTot) { //la parte extra non la aggiungo direttamente(?)
+					this.quantitaPresente= this.capienzaTot;
 					
 					this.cont++;
-					this.quantitaMedia+= this.quantitaPresente;
-			}
-			else //non puoi ridurre
-				this.numGg++;
-			
-			
-		}else { 
-			if((this.quantitaPresente-this.f_out_min)>=0 ) {
-				this.quantitaPresente-= this.f_out_min;
-			
-				this.cont++;
-				this.quantitaMedia+= this.quantitaPresente;
-			}
-		   else //non puoi ridurre
-			 this.numGg++;
-		}
+					this.quantitaMedia+=this.quantitaPresente;
+				}else {	
+					this.quantitaPresente+=e.getFlow().getFlow();
+					
+					this.cont++;
+					this.quantitaMedia+=this.quantitaPresente;
+				}
+				
+				Evento evento = new Evento(e.getDate(), EventType.USCITA, this.f_out_min);
+				this.queue.add(evento);			
+				
+				break;
 		
+			case USCITA: 
+		
+				//riduco
+				
+				double random = Math.random();
+				
+				
+				if(random < PERC) { //riduzione extra
+					if((this.quantitaPresente-(10*e.getFlusso()))>=0 ) {
+							this.quantitaPresente-= (10*e.getFlusso());
+							
+							this.cont++;
+							this.quantitaMedia+= this.quantitaPresente;
+					}
+					else //non puoi ridurre
+						this.numGg++;
+					
+					
+				}else { 
+					if((this.quantitaPresente-e.getFlusso())>=0 ) {
+						this.quantitaPresente-= e.getFlusso();
+					
+						this.cont++;
+						this.quantitaMedia+= this.quantitaPresente;
+					}
+				   else //non puoi ridurre
+					 this.numGg++;
+				}
+				break;
+		
+		}
+
 	}
 	
 	
