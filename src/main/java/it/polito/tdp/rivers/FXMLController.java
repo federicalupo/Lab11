@@ -5,9 +5,14 @@
 package it.polito.tdp.rivers;
 
 import java.net.URL;
+import java.text.DateFormat;
+import java.time.LocalDate;
+import java.util.Locale;
 import java.util.ResourceBundle;
 
 import it.polito.tdp.rivers.model.Model;
+import it.polito.tdp.rivers.model.River;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
@@ -25,7 +30,7 @@ public class FXMLController {
     private URL location;
 
     @FXML // fx:id="boxRiver"
-    private ComboBox<?> boxRiver; // Value injected by FXMLLoader
+    private ComboBox<River> boxRiver; // Value injected by FXMLLoader
 
     @FXML // fx:id="txtStartDate"
     private TextField txtStartDate; // Value injected by FXMLLoader
@@ -48,6 +53,58 @@ public class FXMLController {
     @FXML // fx:id="txtResult"
     private TextArea txtResult; // Value injected by FXMLLoader
 
+    //dubbio =====> due query, ok??
+    @FXML
+    void popolaInterfaccia(ActionEvent event) {
+    	this.txtResult.clear();
+    	River river = this.boxRiver.getValue();
+    	
+    	if(river!=null) {
+    		LocalDate dataI = model.popolaInterfacciaD(river).get(0);
+    		LocalDate dataF = model.popolaInterfacciaD(river).get(1);
+    		
+    		Integer misure = this.model.popolaInterfacciaM(river).get(0).intValue();
+    		Double media =this.model.popolaInterfacciaM(river).get(1);
+    		
+    		
+    		this.txtStartDate.setText(dataI.toString()); //in italiano ??????
+    		this.txtEndDate.setText(dataF.toString());
+    		this.txtNumMeasurements.setText(misure.toString());
+    		this.txtFMed.setText(media.toString());
+    		
+    		
+    	}else {
+    		this.txtResult.setText("Seleziona fiume");
+    	}
+    }
+
+    @FXML
+    void simula(ActionEvent event) {
+   
+    	double k;
+    	try {
+    		k= Double.valueOf(this.txtK.getText());
+    		
+    	}catch(NumberFormatException nfe) {
+    		this.txtResult.setText("Inserisci valore corretto");
+    		return;
+    	}
+    	
+    	River river = this.boxRiver.getValue();
+    	
+    	this.txtResult.appendText("Simulazione: \n");
+    	if(river!=null) {
+    		this.model.simula(k, river);
+    		this.txtResult.appendText("Il numero di giorni in cui non si è potuta garantire l'erogazione minima è: "+this.model.getNumGg()+"\n");
+    		this.txtResult.appendText("L'occupazione media del bacino è "+this.model.getcMedia()+"\n");
+    		
+    	}else {
+    		this.txtResult.setText("Seleziona fiume");
+    	}
+    	
+    	
+    }
+    
     @FXML // This method is called by the FXMLLoader when initialization is complete
     void initialize() {
         assert boxRiver != null : "fx:id=\"boxRiver\" was not injected: check your FXML file 'Scene.fxml'.";
@@ -62,5 +119,6 @@ public class FXMLController {
     
     public void setModel(Model model) {
     	this.model = model;
+    	this.boxRiver.getItems().addAll(model.getAllRivers());
     }
 }
